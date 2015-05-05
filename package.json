@@ -11,7 +11,9 @@
   },
   "main": "index.js",
   "files": [
-    "index.js"
+    "index.js",
+    "cli.js",
+    "versions.json"
   ],
   "scripts": {
     "test": "node node_modules/standard/bin/cmd.js"
