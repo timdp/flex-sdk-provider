@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict'
+
 require('console-stamp')(console, 'HH:MM:ss.l')
 
 var provider = require('./')

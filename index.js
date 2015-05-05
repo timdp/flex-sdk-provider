@@ -1,3 +1,5 @@
+'use strict'
+
 var promisify = require('es6-promisify')
 var Download = require('download')
 var tmp = require('tmp')
