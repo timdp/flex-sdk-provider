@@ -82,6 +82,9 @@ var download = function (version) {
       }
     })
     .then(function () {
+      return mkdirp(path.join(tmpdir, 'frameworks', 'libs', 'player'))
+    })
+    .then(function () {
       return installPlayerglobal(tmpdir)
     })
     .then(function () {
