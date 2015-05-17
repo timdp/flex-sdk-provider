@@ -3,6 +3,7 @@
 var Promise = require('es6-promise').Promise
 var promisify = require('es6-promisify')
 var Download = require('download')
+var defaults = require('defaults')
 var tmp = require('tmp')
 var fs = require('fs')
 var path = require('path')
@@ -17,68 +18,35 @@ var readdir = promisify(fs.readdir)
 var rename = promisify(fs.rename)
 var stat = promisify(fs.stat)
 
-var ROOT = path.join(__dirname, 'lib', 'flex-sdk')
+var DEFAULT_ROOT = path.join(__dirname, 'lib', 'flex-sdk')
 var VERSIONS = require(path.join(__dirname, 'versions.json'))
 
 var isWindows = /^win/.test(os.platform())
 
-var toUrl = function (version) {
-  if (!VERSIONS.hasOwnProperty(version)) {
-    throw new Error('Unknown version: ' + version)
-  }
-  return VERSIONS[version]
+var FlexSdkProvider = function (options) {
+  this._options = defaults(options, {root: DEFAULT_ROOT})
 }
 
-var toPath = function (version) {
-  return path.join(ROOT, version)
-}
-
-var versions = function () {
+FlexSdkProvider.prototype.versions = function () {
   return Object.keys(VERSIONS)
 }
 
-var maybeMakeExecutable = function (file) {
-  return stat(file)
-    .then(function (stats) {
-      if (!stats.isDirectory()) {
-        return chmod(file, '755')
-      }
-    })
-}
-
-var fixPermissions = function (dir) {
-  return readdir(dir)
-    .then(function (contents) {
-      return contents.reduce(function (prev, curr) {
-        return prev.then(function () {
-          return maybeMakeExecutable(path.join(dir, curr))
-        })
-      }, Promise.resolve())
-    })
-}
-
-var downloadAndExtract = function (url, dir) {
-  var dl = new Download({extract: true})
-    .get(url)
-    .dest(dir)
-  return promisify(dl.run.bind(dl))()
-}
-
-var download = function (version) {
-  var url = toUrl(version)
-  var target = toPath(version)
+FlexSdkProvider.prototype.download = function (version) {
+  var that = this
+  var url = this._toUrl(version)
+  var target = this._toPath(version)
   var tmpdir
-  return mkdirp(ROOT)
+  return mkdirp(this._options.root)
     .then(function () {
       return mktmpdir()
     })
     .then(function (_tmpdir) {
       tmpdir = _tmpdir
-      return downloadAndExtract(url, tmpdir)
+      return that._downloadAndExtract(url, tmpdir)
     })
     .then(function () {
       if (!isWindows) {
-        return fixPermissions(path.join(tmpdir, 'bin'))
+        return that._fixPermissions(path.join(tmpdir, 'bin'))
       }
     })
     .then(function () {
@@ -98,24 +66,85 @@ var download = function (version) {
     })
 }
 
-var locate = function (version) {
-  var dir = toPath(version)
+FlexSdkProvider.prototype.locate = function (version) {
+  var dir = this._toPath(version)
   return stat(dir)
     .then(function () {
       return dir
     })
 }
 
-var provision = function (version) {
-  return locate(version)
+FlexSdkProvider.prototype.get = function (version) {
+  var that = this
+  return this.locate(version)
     .catch(function () {
-      return download(version)
+      return that.download(version)
     })
 }
 
-module.exports = {
-  versions: versions,
-  download: download,
-  locate: locate,
-  get: provision
+FlexSdkProvider.prototype._toUrl = function (version) {
+  if (!VERSIONS.hasOwnProperty(version)) {
+    throw new Error('Unknown version: ' + version)
+  }
+  return VERSIONS[version]
 }
+
+FlexSdkProvider.prototype._toPath = function (version) {
+  return path.join(this._options.root, version)
+}
+
+FlexSdkProvider.prototype._maybeMakeExecutable = function (file) {
+  return stat(file)
+    .then(function (stats) {
+      if (!stats.isDirectory()) {
+        return chmod(file, '755')
+      }
+    })
+}
+
+FlexSdkProvider.prototype._fixPermissions = function (dir) {
+  var that = this
+  return readdir(dir)
+    .then(function (contents) {
+      return contents.reduce(function (prev, curr) {
+        return prev.then(function () {
+          return that._maybeMakeExecutable(path.join(dir, curr))
+        })
+      }, Promise.resolve())
+    })
+}
+
+FlexSdkProvider.prototype._downloadAndExtract = function (url, dir) {
+  var dl = new Download({extract: true})
+    .get(url)
+    .dest(dir)
+  return promisify(dl.run.bind(dl))()
+}
+
+var getInstance = (function () {
+  var instance = null
+  return function () {
+    if (instance === null) {
+      instance = new FlexSdkProvider()
+    }
+    return instance
+  }
+})()
+
+FlexSdkProvider.versions = function () {
+  return getInstance().versions()
+}
+
+FlexSdkProvider.download = function (version) {
+  return getInstance().get(version)
+}
+
+FlexSdkProvider.locate = function (version) {
+  return getInstance().locate(version)
+}
+
+FlexSdkProvider.get = function (version) {
+  return getInstance().get(version)
+}
+
+module.exports = FlexSdkProvider

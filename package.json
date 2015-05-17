@@ -33,6 +33,7 @@
   ],
   "dependencies": {
     "console-stamp": "^0.1.6",
+    "defaults": "^1.0.2",
     "download": "^4.1.2",
     "es6-promise": "^2.1.1",
     "es6-promisify": "^1.1.1",
