@@ -17,7 +17,7 @@
     "versions.json"
   ],
   "scripts": {
-    "test": "node node_modules/standard/bin/cmd.js"
+    "test": "node node_modules/standard/bin/cmd.js src/**/*.js"
   },
   "repository": {
     "type": "git",
