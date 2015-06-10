@@ -13,7 +13,7 @@ Not entirely sure where I'm going with this yet. Expect breakage.
 ```js
 var provider = require('flex-sdk-provider')
 
-console.log('Available versions:', provider.versions())
+console.log('Available versions:', provider.versions)
 
 // Get a specific version, optionally downloading it first
 provider.get('4.12.0')
