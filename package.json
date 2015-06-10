@@ -26,12 +26,7 @@
   "bugs": {
     "url": "https://github.com/timdp/flex-sdk-provider/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://raw.githubusercontent.com/timdp/flex-sdk-provider/master/LICENSE"
-    }
-  ],
+  "license": "MIT",
   "dependencies": {
     "babel-runtime": "^5.5.6",
     "console-stamp": "^0.1.6",
