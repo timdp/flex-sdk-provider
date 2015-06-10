@@ -47,6 +47,16 @@ $ provide-flex-sdk --force 4.9.0
 $ provide-flex-sdk all
 ```
 
+## Caveat
+
+The module attempts to avoid multiple simultaneous downloads of the same version
+of the SDK. However, because Node.js does not support file locking yet, the
+mechanism is far from perfect.
+
+The [`fs-ext`](https://www.npmjs.com/package/fs-ext) module does add a native
+`flock`, but at the time of this writing, it is not supported on Windows. It is
+therefore not used at this point.
+
 ## Author
 
 [Tim De Pauw](https://tmdpw.eu/)

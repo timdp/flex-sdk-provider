@@ -19,7 +19,7 @@ const download = version => {
   console.info('Downloading Flex SDK %s ...', version)
   return provider.download(version)
     .then(dir => console.info('Flex SDK v%s installed to %s', version, dir))
-    .catch(err => console.error('Error downloading Flex SDK v%s: %s', version, err))
+    .catch(err => console.error('Error downloading Flex SDK v%s: %s', version, err.stack))
 }
 
 const check = version => {
@@ -48,4 +48,4 @@ if (versions.length === 1 && versions[0] === 'all') {
   console.info('Getting Flex SDK versions: %s', versions.join(' '))
 }
 reduce(versions, argv.force ? download : check)
-  .catch(err => console.error('Unexpected error:', err))
+  .catch(err => console.error('Unexpected error: %s', err.stack))

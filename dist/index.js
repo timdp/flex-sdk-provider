@@ -38,6 +38,10 @@ var _tmp = require('tmp');
 
 var _tmp2 = _interopRequireDefault(_tmp);
 
+var _fsExists = require('fs-exists');
+
+var _fsExists2 = _interopRequireDefault(_fsExists);
+
 var _mkdirp = require('mkdirp');
 
 var _mkdirp2 = _interopRequireDefault(_mkdirp);
@@ -60,20 +64,29 @@ var _os2 = _interopRequireDefault(_os);
 
 _es6Promise2['default'].polyfill();
 
+var exists = (0, _es6Promisify2['default'])(_fsExists2['default']);
 var mkdirp = (0, _es6Promisify2['default'])(_mkdirp2['default']);
 var rimraf = (0, _es6Promisify2['default'])(_rimraf2['default']);
 var installPlayerglobal = (0, _es6Promisify2['default'])(_playerglobalLatest.install);
 var mktmpdir = (0, _es6Promisify2['default'])(_tmp2['default'].dir.bind(_tmp2['default']));
+var readFile = (0, _es6Promisify2['default'])(_fs2['default'].readFile);
+var writeFile = (0, _es6Promisify2['default'])(_fs2['default'].writeFile);
 var chmod = (0, _es6Promisify2['default'])(_fs2['default'].chmod);
 var readdir = (0, _es6Promisify2['default'])(_fs2['default'].readdir);
 var rename = (0, _es6Promisify2['default'])(_fs2['default'].rename);
 var stat = (0, _es6Promisify2['default'])(_fs2['default'].stat);
 
+var IS_WINDOWS = /^win/.test(_os2['default'].platform());
+
 var PKG_ROOT = _path2['default'].resolve(__dirname, '..');
 var FLEX_SDK_ROOT = _path2['default'].join(PKG_ROOT, 'lib', 'flex-sdk');
 var VERSIONS = require(_path2['default'].join(PKG_ROOT, 'versions.json'));
 
-var IS_WINDOWS = /^win/.test(_os2['default'].platform());
+var RETRY_INTERVAL = 200;
+var UPDATE_INTERVAL = 500;
+var MAX_AGE = 1000;
+
+var UPDATE_TIMEOUTS = {};
 
 var FlexSdkProvider = (function () {
   function FlexSdkProvider(options) {
@@ -85,6 +98,92 @@ var FlexSdkProvider = (function () {
   _createClass(FlexSdkProvider, [{
     key: 'download',
     value: function download(version) {
+      var _this = this;
+
+      var dir = null;
+      return this._awaitUnlock(version).then(function () {
+        return _this._beginDownload(version);
+      }).then(function () {
+        return _this._downloadAndInstall(version);
+      }).then(function (_dir) {
+        return dir = _dir;
+      }).then(function () {
+        return _this._endDownload(version);
+      }, function (err) {
+        return _this._setDownloading(version, false).then(function () {
+          throw err;
+        });
+      }).then(function () {
+        return dir;
+      });
+    }
+  }, {
+    key: 'isDownloading',
+    value: function isDownloading(version) {
+      var lockFile = this._toLockFile(version);
+      return exists(lockFile).then(function (ex) {
+        if (!ex) {
+          return false;
+        }
+        return FlexSdkProvider._readLockFile(lockFile);
+      });
+    }
+  }, {
+    key: 'locate',
+    value: function locate(version) {
+      var _this2 = this;
+
+      return this._awaitUnlock(version).then(function () {
+        var dir = _this2._toPath(version);
+        return stat(dir).then(function () {
+          return dir;
+        });
+      });
+    }
+  }, {
+    key: 'get',
+    value: function get(version) {
+      var _this3 = this;
+
+      return this.locate(version)['catch'](function () {
+        return _this3.isDownloading(version).then(function (dl) {
+          return !dl ? _this3.download(version) : _this3._awaitUnlock(version).then(function () {
+            return _this3.locate(version);
+          });
+        });
+      });
+    }
+  }, {
+    key: '_awaitUnlock',
+    value: function _awaitUnlock(version) {
+      var _this4 = this;
+
+      return this.isDownloading(version).then(function (dl) {
+        if (!dl) {
+          return false;
+        }
+        return FlexSdkProvider._delay(RETRY_INTERVAL).then(function () {
+          return _this4._awaitUnlock(version);
+        });
+      });
+    }
+  }, {
+    key: '_beginDownload',
+    value: function _beginDownload(version) {
+      var lockFile = this._toLockFile(version);
+      FlexSdkProvider._writeLockFileSoon(lockFile);
+      return FlexSdkProvider._writeLockFile(lockFile);
+    }
+  }, {
+    key: '_endDownload',
+    value: function _endDownload(version) {
+      var lockFile = this._toLockFile(version);
+      FlexSdkProvider._cancelWritingLockFile(lockFile);
+      return rimraf(lockFile);
+    }
+  }, {
+    key: '_downloadAndInstall',
+    value: function _downloadAndInstall(version) {
       var url = FlexSdkProvider._toUrl(version);
       var target = this._toPath(version);
       var tmpdir = null;
@@ -110,26 +209,14 @@ var FlexSdkProvider = (function () {
       });
     }
   }, {
-    key: 'locate',
-    value: function locate(version) {
-      var dir = this._toPath(version);
-      return stat(dir).then(function () {
-        return dir;
-      });
-    }
-  }, {
-    key: 'get',
-    value: function get(version) {
-      var _this = this;
-
-      return this.locate(version)['catch'](function () {
-        return _this.download(version);
-      });
-    }
-  }, {
     key: '_toPath',
     value: function _toPath(version) {
       return _path2['default'].join(this._options.root, version);
+    }
+  }, {
+    key: '_toLockFile',
+    value: function _toLockFile(version) {
+      return _path2['default'].join(this._options.root, '' + version + '.lock');
     }
   }, {
     key: 'versions',
@@ -140,6 +227,11 @@ var FlexSdkProvider = (function () {
     key: 'download',
     value: function download(version) {
       return FlexSdkProvider._getInstance().download(version);
+    }
+  }, {
+    key: 'isDownloading',
+    value: function isDownloading(version) {
+      return FlexSdkProvider._getInstance().isDownloading(version);
     }
   }, {
     key: 'locate',
@@ -160,21 +252,44 @@ var FlexSdkProvider = (function () {
       return FlexSdkProvider._instance;
     }
   }, {
-    key: '_toUrl',
-    value: function _toUrl(version) {
-      if (!VERSIONS.hasOwnProperty(version)) {
-        throw new Error('Unknown version: ' + version);
-      }
-      return VERSIONS[version];
+    key: '_writeLockFileSoon',
+    value: function _writeLockFileSoon(file) {
+      UPDATE_TIMEOUTS[file] = setTimeout(function () {
+        FlexSdkProvider._writeLockFile(file).then(function () {
+          return FlexSdkProvider._writeLockFileSoon(file);
+        });
+      }, UPDATE_INTERVAL);
     }
   }, {
-    key: '_maybeMakeExecutable',
-    value: function _maybeMakeExecutable(file) {
-      return stat(file).then(function (stats) {
-        if (!stats.isDirectory()) {
-          return chmod(file, '755');
+    key: '_cancelWritingLockFile',
+    value: function _cancelWritingLockFile(file) {
+      clearTimeout(UPDATE_TIMEOUTS[file]);
+      UPDATE_TIMEOUTS[file] = null;
+    }
+  }, {
+    key: '_readLockFile',
+    value: function _readLockFile(file) {
+      return readFile(file, { encoding: 'utf8' }).then(function (str) {
+        return parseInt(str, 10);
+      })['catch'](function (err) {
+        if (err.code !== 'ENOENT') {
+          throw err;
         }
+        return 0;
+      }).then(function (lockDate) {
+        return lockDate + MAX_AGE >= new Date().getTime();
       });
+    }
+  }, {
+    key: '_writeLockFile',
+    value: function _writeLockFile(file) {
+      return writeFile(file, '' + new Date().getTime(), { encoding: 'utf8' });
+    }
+  }, {
+    key: '_downloadAndExtract',
+    value: function _downloadAndExtract(url, dir) {
+      var dl = new _download2['default']({ extract: true }).get(url).dest(dir);
+      return (0, _es6Promisify2['default'])(dl.run.bind(dl))();
     }
   }, {
     key: '_fixPermissions',
@@ -189,10 +304,28 @@ var FlexSdkProvider = (function () {
       });
     }
   }, {
-    key: '_downloadAndExtract',
-    value: function _downloadAndExtract(url, dir) {
-      var dl = new _download2['default']({ extract: true }).get(url).dest(dir);
-      return (0, _es6Promisify2['default'])(dl.run.bind(dl))();
+    key: '_maybeMakeExecutable',
+    value: function _maybeMakeExecutable(file) {
+      return stat(file).then(function (stats) {
+        if (!stats.isDirectory()) {
+          return chmod(file, '755');
+        }
+      });
+    }
+  }, {
+    key: '_toUrl',
+    value: function _toUrl(version) {
+      if (!VERSIONS.hasOwnProperty(version)) {
+        throw new Error('Unknown version: ' + version);
+      }
+      return VERSIONS[version];
+    }
+  }, {
+    key: '_delay',
+    value: function _delay(time) {
+      return new _Promise(function (resolve) {
+        return setTimeout(resolve, time);
+      });
     }
   }, {
     key: 'versions',

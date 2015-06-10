@@ -26,7 +26,7 @@ var download = function download(version) {
   return _2['default'].download(version).then(function (dir) {
     return console.info('Flex SDK v%s installed to %s', version, dir);
   })['catch'](function (err) {
-    return console.error('Error downloading Flex SDK v%s: %s', version, err);
+    return console.error('Error downloading Flex SDK v%s: %s', version, err.stack);
   });
 };
 
@@ -58,5 +58,5 @@ if (versions.length === 1 && versions[0] === 'all') {
   console.info('Getting Flex SDK versions: %s', versions.join(' '));
 }
 reduce(versions, argv.force ? download : check)['catch'](function (err) {
-  return console.error('Unexpected error:', err);
+  return console.error('Unexpected error: %s', err.stack);
 });
