@@ -5,6 +5,7 @@ import promisify from 'es6-promisify'
 import {install} from 'playerglobal-latest'
 import Download from 'download'
 import defaults from 'defaults'
+import userHome from 'user-home'
 import tmp from 'tmp'
 import existsCps from 'fs-exists'
 import mkdirpCps from 'mkdirp'
@@ -30,7 +31,7 @@ const stat = promisify(fs.stat)
 const IS_WINDOWS = /^win/.test(os.platform())
 
 const PKG_ROOT = path.resolve(__dirname, '..')
-const FLEX_SDK_ROOT = path.join(PKG_ROOT, 'lib', 'flex-sdk')
+const FLEX_SDK_ROOT = path.join(userHome, '.flex-sdk')
 const VERSIONS = require(path.join(PKG_ROOT, 'versions.json'))
 
 const RETRY_INTERVAL = 200
@@ -50,7 +51,7 @@ class FlexSdkProvider {
       .then(() => this._downloadAndInstall(version))
       .then(_dir => dir = _dir)
       .then(() => this._endDownload(version),
-        err => this._setDownloading(version, false).then(() => { throw err }))
+        err => this._endDownload(version).then(() => { throw err }))
       .then(() => dir)
   }
   isDownloading (version) {
@@ -144,7 +145,8 @@ class FlexSdkProvider {
       .then(lockDate => (lockDate + MAX_AGE >= new Date().getTime()))
   }
   static _writeLockFile (file) {
-    return writeFile(file, '' + new Date().getTime(), {encoding: 'utf8'})
+    return mkdirp(path.dirname(file))
+      .then(() => writeFile(file, '' + new Date().getTime(), {encoding: 'utf8'}))
   }
   _downloadAndInstall (version) {
     const url = FlexSdkProvider._toUrl(version)
