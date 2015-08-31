@@ -1,6 +1,6 @@
 # Flex SDK Provider
 
-[![npm](https://img.shields.io/npm/v/flex-sdk-provider.svg)](https://www.npmjs.com/package/flex-sdk-provider) [![Build Status](https://img.shields.io/travis/timdp/flex-sdk-provider.svg)](https://travis-ci.org/timdp/flex-sdk-provider) [![JavaScript Standard Style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
+[![npm](https://img.shields.io/npm/v/flex-sdk-provider.svg)](https://www.npmjs.com/package/flex-sdk-provider) [![Dependencies](https://img.shields.io/david/timdp/flex-sdk-provider.svg)](https://david-dm.org/timdp/flex-sdk-provider) [![Build Status](https://img.shields.io/travis/timdp/flex-sdk-provider.svg)](https://travis-ci.org/timdp/flex-sdk-provider) [![JavaScript Standard Style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
 
 Wraps the Adobe/Apache Flex SDK in a Node module. Built as an alternative to
 [flex-sdk](https://www.npmjs.com/package/flex-sdk) following
