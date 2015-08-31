@@ -30,27 +30,27 @@
   "license": "MIT",
   "dependencies": {
     "babel-runtime": "^5.5.6",
-    "console-stamp": "^0.1.6",
+    "console-stamp": "^0.2.0",
     "defaults": "^1.0.2",
     "download": "^4.1.2",
-    "es6-promise": "^2.1.1",
-    "es6-promisify": "^1.1.1",
+    "es6-promise": "^3.0.2",
+    "es6-promisify": "^3.0.0",
     "fs-exists": "^0.1.1",
     "mkdirp": "^0.5.1",
     "playerglobal-latest": "^0.1.7",
     "rimraf": "^2.3.3",
-    "tmp": "0.0.26",
+    "tmp": "0.0.27",
     "user-home": "^2.0.0",
     "yargs": "^3.8.0"
   },
   "devDependencies": {
-    "del": "^1.2.0",
+    "del": "^2.0.0",
     "gulp": "^3.9.0",
     "gulp-babel": "^5.1.0",
     "gulp-load-plugins": "^0.10.0",
     "gulp-notify": "^2.2.0",
     "gulp-plumber": "^1.0.1",
-    "standard": "^4.0.1"
+    "standard": "^5.1.1"
   },
   "standard": {
     "ignore": [
