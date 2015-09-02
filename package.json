@@ -17,7 +17,7 @@
     "versions.json"
   ],
   "scripts": {
-    "prepublish": "gulp build",
+    "prepublish": "gulp clean && gulp build",
     "test": "node node_modules/standard/bin/cmd.js src/**/*.js"
   },
   "repository": {
