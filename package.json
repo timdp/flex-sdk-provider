@@ -20,10 +20,7 @@
     "prepublish": "gulp clean && gulp build",
     "test": "node node_modules/standard/bin/cmd.js src/**/*.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/timdp/flex-sdk-provider"
-  },
+  "repository": "timdp/flex-sdk-provider",
   "bugs": {
     "url": "https://github.com/timdp/flex-sdk-provider/issues"
   },
