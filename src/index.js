@@ -75,8 +75,8 @@ class FlexSdkProvider {
     return this.locate(version)
       .catch(() => {
         return this.isDownloading(version)
-          .then(dl => !dl ? this.download(version) :
-            this._awaitUnlock(version).then(() => this.locate(version)))
+          .then(dl => !dl ? this.download(version)
+            : this._awaitUnlock(version).then(() => this.locate(version)))
       })
   }
   get versions () {
