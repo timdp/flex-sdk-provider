@@ -154,10 +154,8 @@ class FlexSdkProvider {
     let tmpdir = null
     return mkdirp(this._options.root)
       .then(() => mktmpdir())
-      .then(_tmpdir => {
-        tmpdir = _tmpdir
-        return FlexSdkProvider._downloadAndExtract(url, tmpdir)
-      })
+      .then(([dir]) => tmpdir = dir)
+      .then(() => FlexSdkProvider._downloadAndExtract(url, tmpdir))
       .then(() => {
         if (!IS_WINDOWS) {
           return FlexSdkProvider._fixPermissions(path.join(tmpdir, 'bin'))
