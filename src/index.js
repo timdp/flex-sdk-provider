@@ -44,6 +44,7 @@ class FlexSdkProvider {
   constructor (options) {
     this._options = defaults(options, {root: FLEX_SDK_ROOT})
   }
+
   download (version) {
     let dir = null
     return this._awaitUnlock(version)
@@ -54,6 +55,7 @@ class FlexSdkProvider {
         err => this._endDownload(version).then(() => { throw err }))
       .then(() => dir)
   }
+
   isDownloading (version) {
     const lockFile = this._toLockFile(version)
     return exists(lockFile)
@@ -64,6 +66,7 @@ class FlexSdkProvider {
         return FlexSdkProvider._readLockFile(lockFile)
       })
   }
+
   locate (version) {
     return this._awaitUnlock(version)
       .then(() => {
@@ -71,6 +74,7 @@ class FlexSdkProvider {
         return stat(dir).then(() => dir)
       })
   }
+
   get (version) {
     return this.locate(version)
       .catch(() => {
@@ -79,30 +83,38 @@ class FlexSdkProvider {
             : this._awaitUnlock(version).then(() => this.locate(version)))
       })
   }
+
   get versions () {
     return Object.keys(VERSIONS)
   }
+
   static download (version) {
     return FlexSdkProvider._getInstance().download(version)
   }
+
   static isDownloading (version) {
     return FlexSdkProvider._getInstance().isDownloading(version)
   }
+
   static locate (version) {
     return FlexSdkProvider._getInstance().locate(version)
   }
+
   static get (version) {
     return FlexSdkProvider._getInstance().get(version)
   }
+
   static get versions () {
     return FlexSdkProvider._getInstance().versions
   }
+
   static _getInstance () {
     if (!FlexSdkProvider._instance) {
       FlexSdkProvider._instance = new FlexSdkProvider()
     }
     return FlexSdkProvider._instance
   }
+
   _awaitUnlock (version) {
     return this.isDownloading(version)
       .then(dl => {
@@ -113,26 +125,31 @@ class FlexSdkProvider {
           .then(() => this._awaitUnlock(version))
       })
   }
+
   _beginDownload (version) {
     const lockFile = this._toLockFile(version)
     FlexSdkProvider._writeLockFileSoon(lockFile)
     return FlexSdkProvider._writeLockFile(lockFile)
   }
+
   _endDownload (version) {
     const lockFile = this._toLockFile(version)
     FlexSdkProvider._cancelWritingLockFile(lockFile)
     return rimraf(lockFile)
   }
+
   static _writeLockFileSoon (file) {
     UPDATE_TIMEOUTS[file] = setTimeout(() => {
       FlexSdkProvider._writeLockFile(file)
         .then(() => FlexSdkProvider._writeLockFileSoon(file))
     }, UPDATE_INTERVAL)
   }
+
   static _cancelWritingLockFile (file) {
     clearTimeout(UPDATE_TIMEOUTS[file])
     UPDATE_TIMEOUTS[file] = null
   }
+
   static _readLockFile (file) {
     return readFile(file, {encoding: 'utf8'})
       .then(str => parseInt(str, 10))
@@ -144,10 +161,12 @@ class FlexSdkProvider {
       })
       .then(lockDate => (lockDate + MAX_AGE >= new Date().getTime()))
   }
+
   static _writeLockFile (file) {
     return mkdirp(path.dirname(file))
       .then(() => writeFile(file, '' + new Date().getTime(), {encoding: 'utf8'}))
   }
+
   _downloadAndInstall (version) {
     const url = FlexSdkProvider._toUrl(version)
     const target = this._toPath(version)
@@ -167,10 +186,12 @@ class FlexSdkProvider {
       .then(() => rename(tmpdir, target))
       .then(() => target)
   }
+
   static _downloadAndExtract (url, dir) {
     const dl = new Download({extract: true}).get(url).dest(dir)
     return promisify(dl.run.bind(dl))()
   }
+
   static _fixPermissions (dir) {
     return readdir(dir)
       .then(contents => contents.reduce((prev, curr) => {
@@ -178,6 +199,7 @@ class FlexSdkProvider {
         return prev.then(() => FlexSdkProvider._maybeMakeExecutable(p))
       }, Promise.resolve()))
   }
+
   static _maybeMakeExecutable (file) {
     return stat(file).then(stats => {
       if (!stats.isDirectory()) {
@@ -185,18 +207,22 @@ class FlexSdkProvider {
       }
     })
   }
+
   static _toUrl (version) {
     if (!VERSIONS.hasOwnProperty(version)) {
       throw new Error(`Unknown version: ${version}`)
     }
     return VERSIONS[version]
   }
+
   _toPath (version) {
     return path.join(this._options.root, version)
   }
+
   _toLockFile (version) {
     return path.join(this._options.root, `${version}.lock`)
   }
+
   static _delay (time) {
     return new Promise(resolve => setTimeout(resolve, time))
   }
