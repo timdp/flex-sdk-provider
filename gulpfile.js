@@ -17,7 +17,7 @@ gulp.task('build', function () {
     .pipe(plugins.plumber({
       errorHandler: plugins.notify.onError('<%= error.message %>')
     }))
-    .pipe(plugins.babel({optional: ['runtime']}))
+    .pipe(plugins.babel())
     .pipe(gulp.dest(dest))
 })
 

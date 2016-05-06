@@ -1,32 +1,27 @@
 'use strict'
 
-import es6promise from 'es6-promise'
-import promisify from 'es6-promisify'
+import Promise from 'pinkie-promise'
+import pify from 'pify'
 import {install} from 'playerglobal-latest'
 import Download from 'download'
 import defaults from 'defaults'
 import userHome from 'user-home'
 import tmp from 'tmp'
-import existsCps from 'fs-exists'
 import mkdirpCps from 'mkdirp'
-import rimrafCps from 'rimraf'
+import del from 'del'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
-es6promise.polyfill()
-
-const exists = promisify(existsCps)
-const mkdirp = promisify(mkdirpCps)
-const rimraf = promisify(rimrafCps)
-const installPlayerglobal = promisify(install)
-const mktmpdir = promisify(tmp.dir.bind(tmp))
-const readFile = promisify(fs.readFile)
-const writeFile = promisify(fs.writeFile)
-const chmod = promisify(fs.chmod)
-const readdir = promisify(fs.readdir)
-const rename = promisify(fs.rename)
-const stat = promisify(fs.stat)
+const mkdirp = pify(mkdirpCps)
+const installPlayerglobal = pify(install)
+const mktmpdir = pify(tmp.dir.bind(tmp))
+const readFile = pify(fs.readFile)
+const writeFile = pify(fs.writeFile)
+const chmod = pify(fs.chmod)
+const readdir = pify(fs.readdir)
+const rename = pify(fs.rename)
+const stat = pify(fs.stat)
 
 const IS_WINDOWS = /^win/.test(os.platform())
 
@@ -50,21 +45,17 @@ class FlexSdkProvider {
     return this._awaitUnlock(version)
       .then(() => this._beginDownload(version))
       .then(() => this._downloadAndInstall(version))
-      .then(_dir => dir = _dir)
+      .then((_dir) => dir = _dir)
       .then(() => this._endDownload(version),
-        err => this._endDownload(version).then(() => { throw err }))
+        (err) => this._endDownload(version).then(() => { throw err }))
       .then(() => dir)
   }
 
   isDownloading (version) {
     const lockFile = this._toLockFile(version)
-    return exists(lockFile)
-      .then(ex => {
-        if (!ex) {
-          return false
-        }
-        return FlexSdkProvider._readLockFile(lockFile)
-      })
+    return stat(lockFile)
+      .catch(() => false)
+      .then((ex) => ex && FlexSdkProvider._readLockFile(lockFile))
   }
 
   locate (version) {
@@ -79,7 +70,7 @@ class FlexSdkProvider {
     return this.locate(version)
       .catch(() => {
         return this.isDownloading(version)
-          .then(dl => !dl ? this.download(version)
+          .then((dl) => !dl ? this.download(version)
             : this._awaitUnlock(version).then(() => this.locate(version)))
       })
   }
@@ -117,7 +108,7 @@ class FlexSdkProvider {
 
   _awaitUnlock (version) {
     return this.isDownloading(version)
-      .then(dl => {
+      .then((dl) => {
         if (!dl) {
           return false
         }
@@ -135,7 +126,7 @@ class FlexSdkProvider {
   _endDownload (version) {
     const lockFile = this._toLockFile(version)
     FlexSdkProvider._cancelWritingLockFile(lockFile)
-    return rimraf(lockFile)
+    return del(lockFile, {force: true})
   }
 
   static _writeLockFileSoon (file) {
@@ -152,14 +143,14 @@ class FlexSdkProvider {
 
   static _readLockFile (file) {
     return readFile(file, {encoding: 'utf8'})
-      .then(str => parseInt(str, 10))
-      .catch(err => {
+      .then((str) => parseInt(str, 10))
+      .catch((err) => {
         if (err.code !== 'ENOENT') {
           throw err
         }
         return 0
       })
-      .then(lockDate => (lockDate + MAX_AGE >= new Date().getTime()))
+      .then((lockDate) => (lockDate + MAX_AGE >= new Date().getTime()))
   }
 
   static _writeLockFile (file) {
@@ -182,26 +173,26 @@ class FlexSdkProvider {
       })
       .then(() => mkdirp(path.join(tmpdir, 'frameworks', 'libs', 'player')))
       .then(() => installPlayerglobal(tmpdir))
-      .then(() => rimraf(target))
+      .then(() => del(target, {force: true}))
       .then(() => rename(tmpdir, target))
       .then(() => target)
   }
 
   static _downloadAndExtract (url, dir) {
     const dl = new Download({extract: true}).get(url).dest(dir)
-    return promisify(dl.run.bind(dl))()
+    return pify(dl.run.bind(dl))()
   }
 
   static _fixPermissions (dir) {
     return readdir(dir)
-      .then(contents => contents.reduce((prev, curr) => {
+      .then((contents) => contents.reduce((prev, curr) => {
         const p = path.join(dir, curr)
         return prev.then(() => FlexSdkProvider._maybeMakeExecutable(p))
       }, Promise.resolve()))
   }
 
   static _maybeMakeExecutable (file) {
-    return stat(file).then(stats => {
+    return stat(file).then((stats) => {
       if (!stats.isDirectory()) {
         return chmod(file, '755')
       }
@@ -224,7 +215,7 @@ class FlexSdkProvider {
   }
 
   static _delay (time) {
-    return new Promise(resolve => setTimeout(resolve, time))
+    return new Promise((resolve) => setTimeout(resolve, time))
   }
 }
 

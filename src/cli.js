@@ -15,18 +15,18 @@ const argv = yargs
   .alias('f', 'force')
   .argv
 
-const download = version => {
+const download = (version) => {
   console.info('Downloading Flex SDK %s ...', version)
   return provider.download(version)
-    .then(dir => console.info('Flex SDK v%s installed to %s', version, dir))
-    .catch(err => console.error('Error downloading Flex SDK v%s: %s', version, err.stack))
+    .then((dir) => console.info('Flex SDK v%s installed to %s', version, dir))
+    .catch((err) => console.error('Error downloading Flex SDK v%s: %s', version, err.stack))
 }
 
-const check = version => {
+const check = (version) => {
   console.info('Checking for Flex SDK v%s', version)
   return provider.locate(version)
-    .then(dir => console.info('Flex SDK v%s available at %s', version, dir))
-    .catch(err => {
+    .then((dir) => console.info('Flex SDK v%s available at %s', version, dir))
+    .catch((err) => {
       if (err.code !== 'ENOENT') {
         throw err
       }
@@ -48,4 +48,4 @@ if (versions.length === 1 && versions[0] === 'all') {
   console.info('Getting Flex SDK versions: %s', versions.join(' '))
 }
 reduce(versions, argv.force ? download : check)
-  .catch(err => console.error('Unexpected error: %s', err.stack))
+  .catch((err) => console.error('Unexpected error: %s', err.stack))
