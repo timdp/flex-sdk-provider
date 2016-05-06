@@ -1,6 +1,6 @@
 {
   "name": "flex-sdk-provider",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "Wraps the Adobe/Apache Flex SDK in a Node module.",
   "author": "Tim De Pauw <hi@tmdpw.eu> (https://tmdpw.eu/)",
   "engines": {
