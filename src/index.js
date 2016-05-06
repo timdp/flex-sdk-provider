@@ -45,7 +45,7 @@ class FlexSdkProvider {
     return this._awaitUnlock(version)
       .then(() => this._beginDownload(version))
       .then(() => this._downloadAndInstall(version))
-      .then((_dir) => dir = _dir)
+      .then((_dir) => { dir = _dir })
       .then(() => this._endDownload(version),
         (err) => this._endDownload(version).then(() => { throw err }))
       .then(() => dir)
@@ -164,7 +164,7 @@ class FlexSdkProvider {
     let tmpdir = null
     return mkdirp(this._options.root)
       .then(() => mktmpdir())
-      .then(([dir]) => tmpdir = dir)
+      .then(([dir]) => { tmpdir = dir })
       .then(() => FlexSdkProvider._downloadAndExtract(url, tmpdir))
       .then(() => {
         if (!IS_WINDOWS) {
