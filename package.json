@@ -33,6 +33,7 @@
     "download": "^4.1.2",
     "mkdirp": "^0.5.1",
     "pify": "^2.3.0",
+    "pinkie-promise": "^2.0.1",
     "playerglobal-latest": "^0.1.7",
     "tmp": "0.0.28",
     "user-home": "^2.0.0",
