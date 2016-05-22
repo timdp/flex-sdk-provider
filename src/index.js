@@ -9,6 +9,7 @@ import userHome from 'user-home'
 import tmp from 'tmp'
 import mkdirpCps from 'mkdirp'
 import del from 'del'
+import slash from 'slash'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
@@ -142,7 +143,7 @@ class FlexSdkProvider {
   }
 
   static _readLockFile (file) {
-    return readFile(file, {encoding: 'utf8'})
+    return readFile(file, 'utf8')
       .then((str) => parseInt(str, 10))
       .catch((err) => {
         if (err.code !== 'ENOENT') {
@@ -155,7 +156,7 @@ class FlexSdkProvider {
 
   static _writeLockFile (file) {
     return mkdirp(path.dirname(file))
-      .then(() => writeFile(file, '' + new Date().getTime(), {encoding: 'utf8'}))
+      .then(() => writeFile(file, '' + new Date().getTime(), 'utf8'))
   }
 
   _downloadAndInstall (version) {
@@ -175,6 +176,7 @@ class FlexSdkProvider {
       .then(() => installPlayerglobal(tmpdir))
       .then(() => del(target, {force: true}))
       .then(() => rename(tmpdir, target))
+      .then(() => FlexSdkProvider._writeEnvProperties(target))
       .then(() => target)
   }
 
@@ -197,6 +199,13 @@ class FlexSdkProvider {
         return chmod(file, '755')
       }
     })
+  }
+
+  static _writeEnvProperties (installDir) {
+    const filePath = path.join(installDir, 'env.properties')
+    const playerDir = slash(path.join(installDir, 'frameworks', 'libs', 'player'))
+    const contents = `env.PLAYERGLOBAL_HOME=${playerDir}\n`
+    return writeFile(filePath, contents, 'utf8')
   }
 
   static _toUrl (version) {
