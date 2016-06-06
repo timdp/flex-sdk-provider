@@ -9,7 +9,7 @@
   "bin": {
     "provide-flex-sdk": "lib/cli.js"
   },
-  "main": "lib/index.js",
+  "main": "index.js",
   "files": [
     "lib/cli.js",
     "lib/index.js",
