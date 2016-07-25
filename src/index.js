@@ -6,8 +6,8 @@ import {install} from 'playerglobal-latest'
 import Download from 'download'
 import defaults from 'defaults'
 import userHome from 'user-home'
-import tmp from 'tmp'
 import mkdirpCps from 'mkdirp'
+import temp from 'temp'
 import del from 'del'
 import slash from 'slash'
 import fs from 'fs'
@@ -16,7 +16,7 @@ import os from 'os'
 
 const mkdirp = pify(mkdirpCps)
 const installPlayerglobal = pify(install)
-const mktmpdir = pify(tmp.dir.bind(tmp))
+const tempMkdir = pify(temp.mkdir)
 const readFile = pify(fs.readFile)
 const writeFile = pify(fs.writeFile)
 const chmod = pify(fs.chmod)
@@ -164,8 +164,10 @@ class FlexSdkProvider {
     const target = this._toPath(version)
     let tmpdir = null
     return mkdirp(this._options.root)
-      .then(() => mktmpdir())
-      .then(([dir]) => { tmpdir = dir })
+      .then(() => tempMkdir('flex-sdk'))
+      .then((dir) => {
+        tmpdir = dir
+      })
       .then(() => FlexSdkProvider._downloadAndExtract(url, tmpdir))
       .then(() => {
         if (!IS_WINDOWS) {
