@@ -30,7 +30,7 @@
     "console-stamp": "^0.2.0",
     "defaults": "^1.0.2",
     "del": "^2.2.0",
-    "download": "^4.1.2",
+    "download": "^5.0.2",
     "mkdirp": "^0.5.1",
     "pify": "^2.3.0",
     "pinkie-promise": "^2.0.1",
@@ -38,7 +38,7 @@
     "slash": "^1.0.0",
     "temp": "^0.8.3",
     "user-home": "^2.0.0",
-    "yargs": "^4.7.0"
+    "yargs": "^5.0.0"
   },
   "devDependencies": {
     "babel-plugin-transform-runtime": "^6.8.0",
@@ -48,6 +48,6 @@
     "gulp-load-plugins": "^1.2.2",
     "gulp-notify": "^2.2.0",
     "gulp-plumber": "^1.0.1",
-    "standard": "^7.0.1"
+    "standard": "^8.1.0"
   }
 }
