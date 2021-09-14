@@ -9,11 +9,11 @@ import userHome from 'user-home'
 import mkdirpCps from 'mkdirp'
 import temp from 'temp'
 import del from 'del'
+import {moveFile} from 'move-file'
 import slash from 'slash'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import {moveFile} from 'move-file'
 
 const mkdirp = pify(mkdirpCps)
 const installPlayerglobal = pify(install)
