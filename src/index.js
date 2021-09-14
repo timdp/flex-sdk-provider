@@ -13,6 +13,7 @@ import slash from 'slash'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import {moveFile} from 'move-file'
 
 const mkdirp = pify(mkdirpCps)
 const installPlayerglobal = pify(install)
@@ -21,7 +22,6 @@ const readFile = pify(fs.readFile)
 const writeFile = pify(fs.writeFile)
 const chmod = pify(fs.chmod)
 const readdir = pify(fs.readdir)
-const rename = pify(fs.rename)
 const stat = pify(fs.stat)
 
 const IS_WINDOWS = /^win/.test(os.platform())
@@ -177,7 +177,7 @@ class FlexSdkProvider {
       .then(() => mkdirp(path.join(tmpdir, 'frameworks', 'libs', 'player')))
       .then(() => installPlayerglobal(tmpdir))
       .then(() => del(target, {force: true}))
-      .then(() => rename(tmpdir, target))
+      .then(() => moveFile(tmpdir, target))
       .then(() => FlexSdkProvider._writeEnvProperties(target))
       .then(() => target)
   }
